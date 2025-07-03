@@ -52,4 +52,14 @@ def chunks_retrieval(request: Request, body: ChunksBody) -> ChunksResponse:
         object="list",
         model="private-gpt",
         data=results,
-    )
+    )   
+
+# @chunks_router.post("/RetrNew", tags=["Context Chunks"])
+# def chunks_retrieval(request: Request, body: ChunksBody) -> ChunksResponse:
+#     index = VectorStoreIndex.from_vector_store(
+#             self.vector_store_component.vector_store,
+#             storage_context=self.storage_context,
+#             llm=self.llm_component.llm,
+#             embed_model=self.embedding_component.embedding_model,
+#             show_progress=True,
+#         )

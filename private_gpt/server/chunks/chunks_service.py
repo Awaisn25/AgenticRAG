@@ -123,3 +123,23 @@ class ChunksService:
             retrieved_nodes.append(chunk)
 
         return retrieved_nodes
+    
+
+@singleton
+class ParallelRetrieverService:
+    @inject
+    def __init__(
+        self,
+        llm_component: LLMComponent,
+        vector_store_component: VectorStoreComponent,
+        embedding_component: EmbeddingComponent,
+        node_store_component: NodeStoreComponent,
+    ) -> None:
+        self.vector_store_component = vector_store_component
+        self.llm_component = llm_component
+        self.embedding_component = embedding_component
+        self.storage_context = StorageContext.from_defaults(
+            vector_store=vector_store_component.vector_store,
+            docstore=node_store_component.doc_store,
+            index_store=node_store_component.index_store,
+        )

@@ -74,6 +74,11 @@ class IngestionHelper:
         documents = IngestionHelper._load_file_to_documents(file_name, file_data)
         for document in documents:
             document.metadata["file_name"] = file_name
+            document.metadata["entities"] = [{
+                "text":"Prophet Ibrahim",
+                "label":"Name",
+                "score":0.956
+            }]
         IngestionHelper._exclude_metadata(documents)
         return documents
 

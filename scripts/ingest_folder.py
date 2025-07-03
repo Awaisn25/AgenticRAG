@@ -39,7 +39,8 @@ class LocalIngestWorker:
 
     def _ingest_all(self, files_to_ingest: list[Path]) -> None:
         logger.info("Ingesting files=%s", [f.name for f in files_to_ingest])
-        self.ingest_service.bulk_ingest([(str(p.name), p) for p in files_to_ingest])
+        fileList = [(str(p.name), p) for p in files_to_ingest]
+        self.ingest_service.bulk_ingest(fileList)
 
     def ingest_on_watch(self, changed_path: Path) -> None:
         logger.info("Detected change in at path=%s, ingesting", changed_path)

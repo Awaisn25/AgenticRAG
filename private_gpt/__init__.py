@@ -17,8 +17,8 @@ logging.captureWarnings(True)
 # passed to gr.Blocks(enable_analytics=...) but also on the environment
 # variable GRADIO_ANALYTICS_ENABLED. `gradio.strings` actually reads this env
 # directly, so to fully disable gradio analytics we need to set this env var.
-os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
-
+os.environ["GRADIO_ANALYTICS_ENABchaLED"] = "False"
+os.environ["PGPT_PROFILES"] = "ollama"
 # Disable chromaDB telemetry
 # It is already disabled, see PR#1144
 # os.environ["ANONYMIZED_TELEMETRY"] = "False"

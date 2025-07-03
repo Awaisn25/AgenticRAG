@@ -495,4 +495,4 @@ if __name__ == "__main__":
     ui = global_injector.get(PrivateGptUi)
     _blocks = ui.get_ui_blocks()
     _blocks.queue()
-    _blocks.launch(debug=False, show_api=False)
+    _blocks.launch(debug=False, show_api=True)

@@ -18,6 +18,15 @@ __pycache__/
 /coverage.xml
 /htmlcov/
 
+./qdrant_storage/
+/.pytest_cache/
+/.mypy_cache/
+/.ruff_cache/
+/.coverage
+
+./ingest1.txt
+./qdrantCommand.txt
+
 # pyenv
 /.python-version
 

@@ -20,6 +20,7 @@ class CompletionsBody(BaseModel):
     context_filter: ContextFilter | None = None
     include_sources: bool = True
     stream: bool = False
+    collection: str = "new_collection"
 
     model_config = {
         "json_schema_extra": {
@@ -82,11 +83,13 @@ def prompt_completion(
     if body.system_prompt:
         messages.insert(0, OpenAIMessage(content=body.system_prompt, role="system"))
 
+    print(messages)
     chat_body = ChatBody(
         messages=messages,
         use_context=body.use_context,
         stream=body.stream,
         include_sources=body.include_sources,
         context_filter=body.context_filter,
+        collection=body.collection
     )
     return chat_completion(request, chat_body)

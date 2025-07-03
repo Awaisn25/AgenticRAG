@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+import typing
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
+from llama_index.vector_stores.qdrant import QdrantVectorStore
 
 from injector import inject, singleton
 from llama_index.core.chat_engine import ContextChatEngine, SimpleChatEngine
@@ -88,16 +91,52 @@ class ChatService:
         self.llm_component = llm_component
         self.embedding_component = embedding_component
         self.vector_store_component = vector_store_component
+        self.embedding_component = embedding_component
+        self.node_store_component = node_store_component
+        
+        qdrant_client = vector_store_component.client
+        vector_store = typing.cast(
+            BasePydanticVectorStore,
+            QdrantVectorStore(
+                client=qdrant_client,
+                collection_name=settings.vectorstore.collection
+                ),  # TODO
+            )
         self.storage_context = StorageContext.from_defaults(
-            vector_store=vector_store_component.vector_store,
+            # vector_store=vector_store_component.vector_store,
+            vector_store=vector_store,
             docstore=node_store_component.doc_store,
             index_store=node_store_component.index_store,
         )
         self.index = VectorStoreIndex.from_vector_store(
-            vector_store_component.vector_store,
+            # vector_store_component.vector_store,
+            vector_store,
             storage_context=self.storage_context,
             llm=llm_component.llm,
             embed_model=embedding_component.embedding_model,
+            show_progress=True,
+        )
+
+    def _initialize_index(self, collection_name) -> None:
+        """Initialize or reinitialize the vector store and index."""
+        qdrant_client = self.vector_store_component.client
+        vector_store = typing.cast(
+            BasePydanticVectorStore,
+            QdrantVectorStore(
+                client=qdrant_client,
+                collection_name=collection_name
+                ),  # TODO
+            )
+        self.storage_context = StorageContext.from_defaults(
+            vector_store=vector_store,
+            docstore=self.node_store_component.doc_store,
+            index_store=self.node_store_component.index_store,
+        )
+        self.index = VectorStoreIndex.from_vector_store(
+            vector_store,
+            storage_context=self.storage_context,
+            llm=self.llm_component.llm,
+            embed_model=self.embedding_component.embedding_model,
             show_progress=True,
         )
 
@@ -107,6 +146,10 @@ class ChatService:
         use_context: bool = False,
         context_filter: ContextFilter | None = None,
     ) -> BaseChatEngine:
+        
+        collection_name = self.settings.vectorstore.collection
+        self._initialize_index(collection_name)
+
         settings = self.settings
         if use_context:
             vector_index_retriever = self.vector_store_component.get_retriever(

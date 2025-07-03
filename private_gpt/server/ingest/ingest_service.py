@@ -1,11 +1,13 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, AnyStr, BinaryIO
+from typing import TYPE_CHECKING, AnyStr, BinaryIO, cast
 
 from injector import inject, singleton
 from llama_index.core.node_parser import SentenceWindowNodeParser
 from llama_index.core.storage import StorageContext
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
+from llama_index.vector_stores.qdrant import QdrantVectorStore
 
 from private_gpt.components.embedding.embedding_component import EmbeddingComponent
 from private_gpt.components.ingest.ingest_component import get_ingestion_component
@@ -34,6 +36,10 @@ class IngestService:
         node_store_component: NodeStoreComponent,
     ) -> None:
         self.llm_service = llm_component
+        self.node_store_component = node_store_component
+        self.vector_store_component = vector_store_component
+        self.embedding_component = embedding_component
+
         self.storage_context = StorageContext.from_defaults(
             vector_store=vector_store_component.vector_store,
             docstore=node_store_component.doc_store,
@@ -47,6 +53,29 @@ class IngestService:
             transformations=[node_parser, embedding_component.embedding_model],
             settings=settings(),
         )
+
+    def _initialize_index(self, collection_name) -> None:
+        """Initialize or reinitialize the vector store and index."""
+        qdrant_client = self.vector_store_component.client
+        vector_store = cast(
+            BasePydanticVectorStore,
+            QdrantVectorStore(
+                client=qdrant_client,
+                collection_name=collection_name
+                ), 
+            )
+        self.storage_context = StorageContext.from_defaults(
+            vector_store=vector_store,
+            docstore=self.node_store_component.doc_store,
+            index_store=self.node_store_component.index_store,
+        )
+        node_parser = SentenceWindowNodeParser.from_defaults()
+        self.ingest_component = get_ingestion_component(
+        self.storage_context,
+        embed_model=self.embedding_component.embedding_model,
+        transformations=[node_parser, self.embedding_component.embedding_model],
+        settings=settings(),
+    )
 
     def _ingest_data(self, file_name: str, file_data: AnyStr) -> list[IngestedDoc]:
         logger.debug("Got file data of size=%s to ingest", len(file_data))
@@ -78,6 +107,10 @@ class IngestService:
     def ingest_bin_data(
         self, file_name: str, raw_file_data: BinaryIO
     ) -> list[IngestedDoc]:
+        
+        collection_name = self.vector_store_component.settings.vectorstore.collection
+        self._initialize_index(collection_name)
+
         logger.debug("Ingesting binary data with file_name=%s", file_name)
         file_data = raw_file_data.read()
         return self._ingest_data(file_name, file_data)

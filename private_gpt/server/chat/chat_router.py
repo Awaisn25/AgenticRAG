@@ -12,6 +12,7 @@ from private_gpt.open_ai.openai_models import (
 )
 from private_gpt.server.chat.chat_service import ChatService
 from private_gpt.server.utils.auth import authenticated
+from private_gpt.settings.settings import settings, Settings
 
 chat_router = APIRouter(prefix="/v1", dependencies=[Depends(authenticated)])
 
@@ -22,6 +23,7 @@ class ChatBody(BaseModel):
     context_filter: ContextFilter | None = None
     include_sources: bool = True
     stream: bool = False
+    collection: str
 
     model_config = {
         "json_schema_extra": {
@@ -87,7 +89,22 @@ def chat_completion(
     "finish_reason":null}]}
     ```
     """
+    custom_settings = settings()
+    custom_settings.vectorstore.collection = body.collection
+    # Update the settings in the injector
+    request.state.injector.binder.bind(Settings, custom_settings)
     service = request.state.injector.get(ChatService)
+
+    # Check if there's a system message in the messages
+    has_system_message = any(m.role == "system" for m in body.messages)
+    
+    # If no system message exists, add a default one at the beginning
+    if not has_system_message:
+        default_system_message = OpenAIMessage(
+            content="You are a helpful AI assistant.",
+            role="system"
+        )
+        body.messages.insert(0, default_system_message)
     all_messages = [
         ChatMessage(content=m.content, role=MessageRole(m.role)) for m in body.messages
     ]

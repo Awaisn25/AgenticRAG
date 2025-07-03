@@ -126,7 +126,10 @@ class LLMSettings(BaseModel):
 
 class VectorstoreSettings(BaseModel):
     database: Literal["chroma", "qdrant", "postgres", "clickhouse"]
-
+    collection: str = Field(
+        "new_collection", 
+        description="The collection to connect to at startup."
+    )
 
 class NodeStoreSettings(BaseModel):
     database: Literal["simple", "postgres"]
@@ -468,10 +471,10 @@ class QdrantSettings(BaseModel):
             "Either host or str of 'Optional[scheme], host, Optional[port], Optional[prefix]'."
         ),
     )
-    port: int | None = Field(6333, description="Port of the REST API interface.")
+    port: int | None = Field(default=None, description="Port of the REST API interface.")
     grpc_port: int | None = Field(6334, description="Port of the gRPC interface.")
     prefer_grpc: bool | None = Field(
-        False,
+        True,
         description="If `true` - use gRPC interface whenever possible in custom methods.",
     )
     https: bool | None = Field(

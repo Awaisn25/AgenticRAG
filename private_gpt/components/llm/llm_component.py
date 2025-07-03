@@ -22,6 +22,7 @@ class LLMComponent:
     @inject
     def __init__(self, settings: Settings) -> None:
         llm_mode = settings.llm.mode
+        print(settings)
         if settings.llm.tokenizer and settings.llm.mode != "mock":
             # Try to download the tokenizer. If it fails, the LLM will still work
             # using the default one, which is less accurate.

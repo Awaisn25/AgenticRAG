@@ -109,16 +109,17 @@ class VectorStoreComponent:
                         "Qdrant config not found. Using default settings."
                         "Trying to connect to Qdrant at localhost:6333."
                     )
-                    client = QdrantClient()
+                    self.client = QdrantClient() #02/12/2024 - changed "client" to "self.client" for it to be accessible in VectorStoreComponent.py 
                 else:
-                    client = QdrantClient(
+                    self.client = QdrantClient(  #02/12/2024 - changed "client" to "self.client" for it to be accessible in VectorStoreComponent.py
                         **settings.qdrant.model_dump(exclude_none=True)
                     )
+                collection_name = settings.vectorstore.collection
                 self.vector_store = typing.cast(
                     BasePydanticVectorStore,
                     QdrantVectorStore(
-                        client=client,
-                        collection_name="make_this_parameterizable_per_api_call",
+                        client=self.client,
+                        collection_name=collection_name,
                     ),  # TODO
                 )
             case "clickhouse":
